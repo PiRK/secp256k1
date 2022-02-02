@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 LT_INIT
 
-# Make the compilation flags quiet unless V=1 is used.
+# Make the compilation flags quiet unless V=1 is used.ga
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 PKG_PROG_PKG_CONFIG
@@ -19,11 +19,7 @@ AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 
-AM_PROG_CC_C_O
-AC_PROG_CC_C89
-if test x"$ac_cv_prog_cc_c89" = x"no"; then
-  AC_MSG_ERROR([c89 compiler support required])
-fi
+AC_PROG_CC
 AM_PROG_AS
 
 case $host_os in
