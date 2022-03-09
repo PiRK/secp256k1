@@ -1,14 +1,13 @@
 FROM debian:bookworm
 
-RUN dpkg --add-architecture i386
-RUN dpkg --add-architecture s390x
-RUN dpkg --add-architecture armhf
-RUN dpkg --add-architecture arm64
-RUN apt-get update
+RUN dpkg --add-architecture i386 && \
+    dpkg --add-architecture s390x && \
+    dpkg --add-architecture armhf && \
+    dpkg --add-architecture arm64
 
 # dkpg-dev: to make pkg-config work in cross-builds
 # llvm: for llvm-symbolizer, which is used by clang's UBSan for symbolized stack traces
-RUN apt-get install --no-install-recommends --no-upgrade -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
         git ca-certificates \
         automake cmake default-jdk dpkg-dev libssl-dev libtool make ninja-build pkg-config python3 qemu-user valgrind \
         gcc clang llvm libclang-rt-dev libc6-dbg \
@@ -17,7 +16,22 @@ RUN apt-get install --no-install-recommends --no-upgrade -y \
         gcc-s390x-linux-gnu libc6-dev-s390x-cross libc6-dbg:s390x \
         gcc-arm-linux-gnueabihf libc6-dev-armhf-cross libc6-dbg:armhf \
         gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6-dbg:arm64 \
-        wine gcc-mingw-w64-x86-64
+        gcc-mingw-w64-x86-64-win32 wine64 wine \
+        gcc-mingw-w64-i686-win32 wine32
 
-# Run a dummy command in wine to make it set up configuration
-RUN wine64-stable xcopy || true
+WORKDIR /root
+# The "wine" package provides a convience wrapper that we need
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        git ca-certificates wine64 wine python3-simplejson python3-six msitools winbind procps && \
+# Workaround for `wine` package failure to employ the Debian alternatives system properly.
+    ln -s /usr/lib/wine/wine64 /usr/bin/wine64 && \
+# Set of tools for using MSVC on Linux.
+    git clone https://github.com/mstorsjo/msvc-wine && \
+    mkdir /opt/msvc && \
+    python3 msvc-wine/vsdownload.py --accept-license --dest /opt/msvc Microsoft.VisualStudio.Workload.VCTools && \
+    msvc-wine/install.sh /opt/msvc
+
+# Initialize the wine environment. Wait until the wineserver process has
+# exited before closing the session, to avoid corrupting the wine prefix.
+RUN wine64 wineboot --init && \
+    while (ps -A | grep wineserver) > /dev/null; do sleep 1; done
