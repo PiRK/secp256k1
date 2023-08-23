@@ -303,6 +303,39 @@ jobs:
       - *CI_SCRIPT_IN_DOCKER
       - *PRINT_ENV
 
+  msan_debian:
+    name: "MSan"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars:
+              CFLAGS: '-fsanitize=memory -g'
+          - env_vars:
+              ECMULTGENPRECISION: 2
+              ECMULTWINDOW: 2
+              CFLAGS: '-fsanitize=memory -g -O3'
+
+    env:
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      EXPERIMENTAL: 'yes'
+      MULTISET: 'yes'
+      SCHNORRSIG: 'yes'
+      CTIMETESTS: 'yes'
+      CC: 'clang'
+      SECP256K1_TEST_ITERS: 32
+      ASM: 'no'
+      WITH_VALGRIND: 'no'
+
+    steps:
+      - *CHECKOUT
+      - *CI_SCRIPT_IN_DOCKER
+      - *PRINT_ENV
+
   mingw_debian:
     name: ${{ matrix.configuration.job_name }}
     runs-on: ubuntu-latest
