@@ -209,9 +209,14 @@ jobs:
       CTIMETESTS: 'no'
 
     strategy:
+      fail-fast: false
       matrix:
         configuration:
-          - env_vars: {}
+          - env_vars: { } # gcc
+          - env_vars: # clang
+              CC: 'clang --target=aarch64-linux-gnu'
+          - env_vars: # clang-snapshot
+              CC: 'clang-snapshot --target=aarch64-linux-gnu'
 
     steps:
       - *CHECKOUT
@@ -312,11 +317,11 @@ jobs:
       matrix:
         configuration:
           - env_vars:
-              CFLAGS: '-fsanitize=memory -g'
+              CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g'
           - env_vars:
               ECMULTGENPRECISION: 2
               ECMULTWINDOW: 2
-              CFLAGS: '-fsanitize=memory -g -O3'
+              CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g -O3'
 
     env:
       ECDH: 'yes'

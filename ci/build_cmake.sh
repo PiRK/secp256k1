@@ -8,6 +8,8 @@ read -r -a CMAKE_EXTRA_FLAGS <<< "$CMAKE_EXTRA_FLAGS"
 
 if [ "x$HOST" = "xi686-linux-gnu" ]; then
   CMAKE_EXTRA_FLAGS+=("-DCMAKE_C_FLAGS=-m32")
+elif [ "x$HOST" = "xaarch64-linux-gnu" ]; then
+  CMAKE_EXTRA_FLAGS+=("-DCMAKE_TOOLCHAIN_FILE=../cmake/platforms/LinuxAArch64.cmake")
 fi
 
 if [ "$WITH_VALGRIND" = "yes" ]; then
