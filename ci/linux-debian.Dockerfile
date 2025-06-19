@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 SHELL ["/bin/bash", "-c"]
 
@@ -19,9 +19,9 @@ RUN dpkg --add-architecture i386 && \
     dpkg --add-architecture arm64 && \
     dpkg --add-architecture ppc64el
 
-# dkpg-dev: to make pkg-config work in cross-builds
+# dpkg-dev: to make pkg-config work in cross-builds
 # llvm: for llvm-symbolizer, which is used by clang's UBSan for symbolized stack traces
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
         git ca-certificates \
         automake cmake default-jdk dpkg-dev libssl-dev libtool make ninja-build pkg-config python3 qemu-user valgrind \
         gcc clang llvm libclang-rt-dev libc6-dbg \
@@ -35,8 +35,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         gcc-mingw-w64-i686-win32 wine32
 
 # Build and install gcc snapshot
-ARG GCC_SNAPSHOT_MAJOR=14
-RUN apt-get update && apt-get install --no-install-recommends -y wget libgmp-dev libmpfr-dev libmpc-dev flex && \
+ARG GCC_SNAPSHOT_MAJOR=16
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    wget libgmp-dev libmpfr-dev libmpc-dev flex && \
     mkdir gcc && cd gcc && \
     wget --progress=dot:giga --https-only --recursive --accept '*.tar.xz' --level 1 --no-directories "https://gcc.gnu.org/pub/gcc/snapshots/LATEST-${GCC_SNAPSHOT_MAJOR}" && \
     wget "https://gcc.gnu.org/pub/gcc/snapshots/LATEST-${GCC_SNAPSHOT_MAJOR}/sha512.sum" && \
@@ -57,7 +58,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y wget libgmp-dev
 # Install clang snapshot, see https://apt.llvm.org/
 RUN \
     # Setup GPG keys of LLVM repository
-    apt-get update && apt-get install --no-install-recommends -y wget && \
+    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y wget && \
     wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc && \
     # Add repository for this Debian release
     . /etc/os-release && echo "deb http://apt.llvm.org/${VERSION_CODENAME} llvm-toolchain-${VERSION_CODENAME} main" >> /etc/apt/sources.list && \
@@ -65,7 +66,7 @@ RUN \
     # Determine the version number of the LLVM development branch
     LLVM_VERSION=$(apt-cache search --names-only '^clang-[0-9]+$' | sort -V | tail -1 | cut -f1 -d" " | cut -f2 -d"-" ) && \
     # Install
-    apt-get install --no-install-recommends -y "clang-${LLVM_VERSION}" && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y "clang-${LLVM_VERSION}" && \
     # Create symlink
     ln -s "/usr/bin/clang-${LLVM_VERSION}" /usr/bin/clang-snapshot && \
     # Clean up
