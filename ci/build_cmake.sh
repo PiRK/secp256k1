@@ -57,6 +57,10 @@ export SECP256K1_BENCH_ITERS="$ITERS"
 
 ninja $CMAKE_TARGET
 
+if [ "$BENCH" = "yes" ]; then
+  ninja bench-secp256k1
+fi
+
 # Print information about binaries so that we can see that the architecture is correct
 file *tests || true
 file *bench || true
