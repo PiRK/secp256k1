@@ -34,6 +34,16 @@ if [ "x$ECMULTWINDOW" != "xauto" ]; then
   ECMULT_WINDOW_SIZE_ARG="-DSECP256K1_ECMULT_WINDOW_SIZE=$ECMULTWINDOW"
 fi
 
+# Workaround for https://bugs.kde.org/show_bug.cgi?id=452758 (fixed in valgrind 3.20.0).
+case "${CC:-undefined}" in
+    clang*)
+        if [ "$CTIMETESTS" = "yes" ] && [ "$WITH_VALGRIND" = "yes" ]
+        then
+            export CFLAGS="${CFLAGS:+$CFLAGS }-gdwarf-4"
+        fi
+        ;;
+esac
+
 mkdir -p buildcmake/install
 pushd buildcmake
 
@@ -58,6 +68,7 @@ ${CMAKE_COMMAND} -GNinja .. \
   -DSECP256K1_ENABLE_MODULE_SCHNORRSIG=$SCHNORRSIG \
   -DSECP256K1_ENABLE_ASM=$ASM \
   -DSECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY=$WIDEMUL \
+  -DSECP256K1_BUILD_CTIME_TESTS=$CTIMETESTS \
   $ECMULT_WINDOW_SIZE_ARG \
   $ECMULT_GEN_PRECISION_ARG \
   "${CMAKE_EXTRA_FLAGS[@]}"
@@ -66,6 +77,21 @@ ninja $CMAKE_TARGET
 
 if [ "$EXAMPLES" = "yes" ]; then
     ninja secp256k1-examples
+fi
+
+if [ "$CTIMETESTS" = "yes" ]; then
+  ninja ctime_tests
+
+  print_log() {
+    cat ctime_tests.log || :
+  }
+  trap 'print_log' ERR
+
+  if [ "$WITH_VALGRIND" = "yes" ]; then
+    valgrind --error-exitcode=42 ./ctime_tests > ctime_tests.log 2>&1
+  else
+    ./ctime_tests > ctime_tests.log 2>&1
+  fi
 fi
 
 # Print information about binaries so that we can see that the architecture is correct

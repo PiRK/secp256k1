@@ -375,3 +375,14 @@ install_target(bench
 )
 
 add_subdirectory(examples)
+
+option(SECP256K1_BUILD_CTIME_TESTS "Build libsecp256k1's Extrakeys module" OFF)
+if(SECP256K1_BUILD_CTIME_TESTS)
+	# This is typically compiled with -DENABLE_SANITIZERS=memory or -DCMAKE_C_FLAGS="-DVALGRIND".
+	if(ENABLE_SANITIZERS)
+		include(Sanitizers)
+		enable_sanitizers(${ENABLE_SANITIZERS})
+	endif()
+	add_executable(ctime_tests src/ctime_tests.c)
+	target_link_libraries(ctime_tests secp256k1)
+endif()

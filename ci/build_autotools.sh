@@ -99,7 +99,7 @@ print_logs() {
   cat tests.log || :
   cat noverify_tests.log || :
   cat exhaustive_tests.log || :
-  cat ctime_test.log || :
+  cat ctime_tests.log || :
   cat bench.log || :
 }
 trap 'print_logs' ERR

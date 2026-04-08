@@ -14,13 +14,27 @@ function(enable_sanitizers)
 	set(_save_linker_flags ${CMAKE_EXE_LINKER_FLAGS})
 	string(APPEND CMAKE_EXE_LINKER_FLAGS " ${_fsanitize_option}")
 
-	include(CheckCXXSourceCompiles)
-	check_cxx_source_compiles("
-		#include <cstdint>
-		#include <cstddef>
-		extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
-		__attribute__((weak)) int main() { return 0; }
-	" ${_sanitizers_compile})
+	if(CMAKE_CXX_COMPILER_LOADED)
+		include(CheckCXXSourceCompiles)
+		check_cxx_source_compiles("
+			#include <cstdint>
+			#include <cstddef>
+			extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
+			__attribute__((weak)) int main() { return 0; }
+		" ${_sanitizers_compile})
+	elseif(CMAKE_C_COMPILER_LOADED)
+		include(CheckCSourceCompiles)
+		check_c_source_compiles("
+			#include <stdint.h>
+			#include <stddef.h>
+
+			int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
+
+			__attribute__((weak)) int main() { return 0; }
+		" ${_sanitizers_compile})
+	else()
+		message(FATAL_ERROR "enable_sanitizers() requires either a C or C++ compiler")
+	endif()
 
 	set(CMAKE_EXE_LINKER_FLAGS ${_save_linker_flags})
 
@@ -32,6 +46,10 @@ function(enable_sanitizers)
 	if("address" IN_LIST ARGN OR "undefined" IN_LIST ARGN)
 		include(AddCompilerFlags)
 		add_compiler_flags(-fno-omit-frame-pointer -fno-optimize-sibling-calls)
+	endif()
+	if("memory" IN_LIST ARGN)
+		include(AddCompilerFlags)
+		add_compiler_flags(-fno-sanitize-memory-param-retval)
 	endif()
 
 	add_compile_options(${_fsanitize_option})
