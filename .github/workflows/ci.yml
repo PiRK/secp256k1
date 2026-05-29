@@ -81,6 +81,7 @@ jobs:
           - env_vars: {AUTOTOOLS_TARGET: 'distcheck', CMAKE_TARGET: 'install', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no'}
           - env_vars: {AUTOTOOLS_EXTRA_FLAGS: 'CPPFLAGS=-DDETERMINISTIC', CMAKE_EXTRA_FLAGS: '-DCMAKE_C_FLAGS=-DDETERMINISTIC'}
           - env_vars: {AUTOTOOLS_EXTRA_FLAGS: 'CFLAGS=-O0', CMAKE_EXTRA_FLAGS: '-DCMAKE_BUILD_TYPE=Debug', CTIMETESTS: 'no'}
+          - env_vars: {AUTOTOOLS_EXTRA_FLAGS: 'CFLAGS=-O1', CMAKE_EXTRA_FLAGS: '-DCMAKE_C_FLAGS=-O1', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
           - env_vars: {SCHNORR: 'no'}
           - env_vars: { ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
           - env_vars: { ECMULTGENPRECISION: 8, ECMULTWINDOW: 4 }
